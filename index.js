@@ -15,7 +15,7 @@ const cors = require('cors');
 
 async function printPDF() {
     const date = new Date().toISOString();
-    filename
+
 
     const filename = `pdf-${date}`
 
@@ -24,7 +24,7 @@ async function printPDF() {
         args,
         defaultViewport,
         executablePath: await executablePath,
-        headless: true, // 👈Very important, remember we want to run headless chrome
+        headless: true, //
         ignoreHTTPSErrors: true,
     });
 
@@ -34,35 +34,36 @@ async function printPDF() {
     await page.goto('http://invoez.com/printables/0?short=אוהבים%20אתכם&long=משלוח מיוחד ומתוק היישר מתוניס לכם נשאר רק להכין כוס תה מתוק ולהינות!&signature=אוהבים%20אתכם', { waitUntil: 'networkidle0' });
 
     await page.pdf({ path: pdfPath, preferCSSPageSize: false, printBackground: true, scale: 1, width: "100mm", height: '150mm' });
-    await browser.close();
 
-    const params = {
-        Key: pdfPath,
-        Body: fs.createReadStream(pdfPath),
-        Bucket: "cyclic-shy-red-piglet-tutu-ap-south-1",
-        ContentType: "application/pdf",
-    };
-    await s3
-        .upload(params, async(err, res) => {
-            if (err) {
-                console.log(err);
-                throw new Error(err);
-            }
-            console.log("done");
-            console.log(res);
-            return cb(null, res);
-        })
-        .promise();
 
-    result = await page.title();
-    return cb(null, result);
+    /*  const params = {
+         Key: pdfPath,
+         Body: fs.createReadStream(pdfPath),
+         Bucket: "cyclic-shy-red-piglet-tutu-ap-south-1",
+         ContentType: "application/pdf",
+     };
+     await s3
+         .upload(params, async(err, res) => {
+             if (err) {
+                 console.log(err);
+                 throw new Error(err);
+             }
+             console.log("done");
+             console.log(res);
+             return cb(null, res);
+         })
+         .promise();
+
+     result = await page.title(); */
+    return { "date": "done" };
 
 }
 
 
 app.all('/', (req, res) => {
     console.log("Just got a request!")
-    res.send('Yo!')
+    res.send('Yo!');
+
 })
 
 
@@ -85,13 +86,7 @@ app.post('/printables', async function(req, res) {
 
 
 });
-app.get('/',
-    (req, res) => {
-        res.send({
-            main: __dirname
-        })
-    }
-)
+
 app.listen(process.env.PORT || '3005', () => {
     console.log('Server is listening on' + port);
 })
