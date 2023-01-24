@@ -1,4 +1,3 @@
-const puppeteer = require('puppeteer')
 const chromium = require('chrome-aws-lambda')
 const express = require('express')
 
@@ -18,12 +17,12 @@ async function printPDF() {
         headless: chrome.headless
     } : {
         args: [],
-        headless: false,
+        headless: true,
         executablePath: process.platform === 'win32' ?
             'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe' : process.platform === 'linux' ?
             '/usr/bin/google-chrome' : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     };
-    const browser = await puppeteer.launch(options);
+    const browser = await chromium.launch(options);
     const page = await browser.newPage();
     await page.goto('http://invoez.com/printables/0?short=אוהבים%20אתכם&long=משלוח מיוחד ומתוק היישר מתוניס לכם נשאר רק להכין כוס תה מתוק ולהינות!&signature=אוהבים%20אתכם', { waitUntil: 'networkidle0' });
 
