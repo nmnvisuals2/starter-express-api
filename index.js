@@ -1,4 +1,7 @@
-const chromium = require('chrome-aws-lambda')
+const { S3 } = require("aws-sdk");
+const { puppeteer, args, defaultViewport, executablePath } = require("chrome-aws-lambda");
+
+const s3 = new S3();
 const express = require('express')
 
 
@@ -11,23 +14,48 @@ var path = require('path');
 const cors = require('cors');
 
 async function printPDF() {
-    const options = process.env.AWS_REGION ? {
-        args: chrome.args,
-        executablePath: await chrome.executablePath,
-        headless: chrome.headless
-    } : {
-        args: [],
-        headless: true,
-        executablePath: process.platform === 'win32' ?
-            'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe' : process.platform === 'linux' ?
-            '/usr/bin/google-chrome' : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    };
-    const browser = await chromium.launch(options);
+    const date = new Date().toISOString();
+    filename
+
+    const filename = `pdf-${date}`
+
+    const pdfPath = `/tmp/${filename}.pdf`
+    const browser = await puppeteer.launch({
+        args,
+        defaultViewport,
+        executablePath: await executablePath,
+        headless: true, // 👈Very important, remember we want to run headless chrome
+        ignoreHTTPSErrors: true,
+    });
+
+
     const page = await browser.newPage();
+    console.log("Opening new page...");
     await page.goto('http://invoez.com/printables/0?short=אוהבים%20אתכם&long=משלוח מיוחד ומתוק היישר מתוניס לכם נשאר רק להכין כוס תה מתוק ולהינות!&signature=אוהבים%20אתכם', { waitUntil: 'networkidle0' });
 
-    await page.pdf({ path: `${__dirname}/public/${Date.now()}.pdf`, preferCSSPageSize: false, printBackground: true, scale: 1, width: "100mm", height: '150mm' });
+    await page.pdf({ path: pdfPath, preferCSSPageSize: false, printBackground: true, scale: 1, width: "100mm", height: '150mm' });
     await browser.close();
+
+    const params = {
+        Key: pdfPath,
+        Body: fs.createReadStream(pdfPath),
+        Bucket: "cyclic-shy-red-piglet-tutu-ap-south-1",
+        ContentType: "application/pdf",
+    };
+    await s3
+        .upload(params, async(err, res) => {
+            if (err) {
+                console.log(err);
+                throw new Error(err);
+            }
+            console.log("done");
+            console.log(res);
+            return cb(null, res);
+        })
+        .promise();
+
+    result = await page.title();
+    return cb(null, result);
 
 }
 
